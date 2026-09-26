@@ -1,0 +1,37 @@
+---
+import Base from "../../layouts/Base.astro";
+import { enrolledCourseIds, listCourses } from "../../lib/db";
+
+const courses = listCourses();
+const enrolled = enrolledCourseIds();
+---
+
+<Base title="Course catalog">
+  <h1>Course catalog</h1>
+  <p>Every course's full description is right here — no separate lookup required.</p>
+  <ul class="course-list">
+    {
+      courses.map((course) => (
+        <li class="course-card" style={{ borderInlineStartColor: course.color }}>
+          <h2>
+            <a href={`/courses/${course.code.toLowerCase()}/`}>
+              {course.code}: {course.title}
+            </a>
+          </h2>
+          <p>{course.summary}</p>
+          <form method="post" action="/api/enrol">
+            <input type="hidden" name="courseId" value={course.id} />
+            <input type="hidden" name="back" value="/courses/" />
+            {enrolled.has(course.id) ? (
+              <button type="submit" formaction="/api/drop">
+                Enrolled — drop
+              </button>
+            ) : (
+              <button type="submit">Add to my timetable</button>
+            )}
+          </form>
+        </li>
+      ))
+    }
+  </ul>
+</Base>

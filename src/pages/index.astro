@@ -1,53 +1,28 @@
 ---
-import { listMessages } from "../lib/db";
-import "../styles.css";
-
-const messages = listMessages();
+import Base from "../layouts/Base.astro";
 ---
 
-<!doctype html>
-<html lang="en-AU">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>COMP4020 prototype</title>
-  </head>
-  <body>
-    <nav aria-label="site">
-      <a href="/">Guestbook</a>
-      <a href="/readme/">About</a>
-    </nav>
-    <main>
-      <h1>Guestbook</h1>
-      <p>
-        A minimal full-stack starter: messages live in SQLite on the machine's
-        volume (state survives a reload and a redeploy), and new messages
-        appear in every open tab over a server-sent-events stream — open this
-        page twice and sign it in one. Replace all of this with your own
-        prototype.
-      </p>
-      <form method="post" action="/api/messages">
-        <label for="body">Leave a message</label>
-        <input id="body" name="body" required maxlength="500" />
-        <button>Sign</button>
-      </form>
-      <ul id="messages">
-        {messages.map((message) => <li>{message.body}</li>)}
-      </ul>
-    </main>
-    <script>
-      // The live half of the demo: subscribe to the SSE stream and prepend
-      // messages as they arrive. The form itself needs none of this — its
-      // POST + redirect re-renders the submitting tab from SQLite; this
-      // stream is how every other tab finds out.
-      const list = document.querySelector("#messages");
-      const source = new EventSource("/api/events");
-      source.addEventListener("message", (event) => {
-        const message = JSON.parse(event.data);
-        const item = document.createElement("li");
-        item.textContent = message.body;
-        list?.prepend(item);
-      });
-    </script>
-  </body>
-</html>
+<Base title="Course Explorer">
+  <h1>Course Explorer</h1>
+  <p>
+    A mock replacement for the part of ANU's enrolment system that makes you
+    look a course up on one site, copy its class number, then paste it into a
+    completely different one that shows you no course content at all. Here
+    the course descriptions and the timetable live in the same place.
+  </p>
+  <p>
+    <strong>Everything in the catalog is fictional</strong> — course codes,
+    titles and descriptions are invented for this prototype, not copied from
+    any real ANU offering.
+  </p>
+  <div class="cta-row">
+    <a class="button" href="/courses/">Browse the course catalog</a>
+    <a class="button button-secondary" href="/timetable/">Go to my timetable</a>
+  </div>
+  <p>
+    Enrol in a course from the catalog, then head to <a href="/timetable/">my timetable</a>
+    to pick a tutorial time for it — hovering an option previews where it'd
+    sit on the week before you commit to it, and clashes with what you've
+    already picked are highlighted, not blocked.
+  </p>
+</Base>

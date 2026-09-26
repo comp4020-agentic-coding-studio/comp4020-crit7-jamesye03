@@ -1,0 +1,226 @@
+---
+import Base from "../../layouts/Base.astro";
+import { listEnrolledCourses } from "../../lib/db";
+import {
+  DAY_LABELS,
+  GRID_END_MINUTES,
+  GRID_START_MINUTES,
+  findConflicts,
+  formatTime,
+  gridPosition,
+  layoutDay,
+  type LaneSpan,
+} from "../../lib/timetable";
+
+const enrolledCourses = listEnrolledCourses();
+
+interface Block extends LaneSpan {
+  courseId: number;
+  code: string;
+  color: string;
+  label: string;
+  kind: "lecture" | "tutorial";
+}
+
+const blocks: Block[] = enrolledCourses.flatMap((ec) => {
+  const list: Block[] = [
+    {
+      id: ec.lecture.id,
+      courseId: ec.course.id,
+      code: ec.course.code,
+      color: ec.course.color,
+      label: `${ec.course.code} · ${ec.lecture.label}`,
+      kind: "lecture",
+      day: ec.lecture.day,
+      startMinutes: ec.lecture.startMinutes,
+      endMinutes: ec.lecture.endMinutes,
+    },
+  ];
+  const chosen = ec.tutorials.find((t) => t.id === ec.chosenTutorialId);
+  if (chosen) {
+    list.push({
+      id: chosen.id,
+      courseId: ec.course.id,
+      code: ec.course.code,
+      color: ec.course.color,
+      label: `${ec.course.code} · ${chosen.label}`,
+      kind: "tutorial",
+      day: chosen.day,
+      startMinutes: chosen.startMinutes,
+      endMinutes: chosen.endMinutes,
+    });
+  }
+  return list;
+});
+
+const conflictIds = findConflicts(blocks);
+
+const laneByDay = new Map<number, Map<number, { lane: number; laneCount: number }>>();
+for (let day = 0; day < 7; day++) {
+  laneByDay.set(
+    day,
+    layoutDay(blocks.filter((b) => b.day === day)),
+  );
+}
+
+const hourMarks = Array.from(
+  { length: (GRID_END_MINUTES - GRID_START_MINUTES) / 60 + 1 },
+  (_, i) => GRID_START_MINUTES + i * 60,
+);
+
+// Data the hover-preview script needs: every committed block's time span,
+// which course it belongs to, and its kind — so previewing a course's other
+// tutorial options can exclude that same course's currently-committed
+// tutorial (it'd be replaced, not added) while still comparing against its
+// lecture and everything else.
+const committedForScript = blocks.map((b) => ({
+  day: b.day,
+  start: b.startMinutes,
+  end: b.endMinutes,
+  courseId: b.courseId,
+  kind: b.kind,
+}));
+---
+
+<Base title="My timetable">
+  <h1>My timetable</h1>
+
+  {
+    enrolledCourses.length === 0 && (
+      <p>
+        You haven't added any courses yet. <a href="/courses/">Browse the catalog</a> and add a few to see them
+        here.
+      </p>
+    )
+  }
+
+  <div class="timetable-layout">
+    <div class="course-panel">
+      {
+        enrolledCourses.map((ec) => (
+          <section class="course-block" style={{ borderInlineStartColor: ec.course.color }}>
+            <h2>
+              {ec.course.code}: {ec.course.title}
+            </h2>
+            <p class="session-row">
+              <span class="swatch" style={{ backgroundColor: ec.course.color }} />
+              {ec.lecture.label} (fixed): {DAY_LABELS[ec.lecture.day]}{" "}
+              {formatTime(ec.lecture.startMinutes)}–{formatTime(ec.lecture.endMinutes)}
+            </p>
+            <ul class="tutorial-options">
+              {ec.tutorials.map((tutorial) => (
+                <li
+                  class="tutorial-option"
+                  data-day={tutorial.day}
+                  data-start={tutorial.startMinutes}
+                  data-end={tutorial.endMinutes}
+                  data-course-id={ec.course.id}
+                >
+                  <form method="post" action="/api/choose-tutorial">
+                    <input type="hidden" name="courseId" value={ec.course.id} />
+                    <input type="hidden" name="sessionId" value={tutorial.id} />
+                    <span>
+                      {tutorial.label}: {DAY_LABELS[tutorial.day]} {formatTime(tutorial.startMinutes)}–
+                      {formatTime(tutorial.endMinutes)}, {tutorial.location}
+                    </span>
+                    {ec.chosenTutorialId === tutorial.id ? (
+                      <strong class="current-pick">current</strong>
+                    ) : (
+                      <button type="submit">Choose</button>
+                    )}
+                  </form>
+                </li>
+              ))}
+            </ul>
+            <form method="post" action="/api/drop">
+              <input type="hidden" name="courseId" value={ec.course.id} />
+              <button type="submit" class="button-secondary">
+                Drop course
+              </button>
+            </form>
+          </section>
+        ))
+      }
+    </div>
+
+    <div class="grid-wrap">
+      <div class="timetable-grid" style={{ "--grid-height": `${GRID_END_MINUTES - GRID_START_MINUTES}px` }}>
+        <div class="corner" aria-hidden="true"></div>
+        {DAY_LABELS.map((label) => <div class="day-head">{label}</div>)}
+        <div class="time-axis" aria-hidden="true">
+          {hourMarks.map((minutes) => (
+            <div class="hour-mark" style={{ top: `${minutes - GRID_START_MINUTES}px` }}>
+              {formatTime(minutes)}
+            </div>
+          ))}
+        </div>
+        {Array.from({ length: 7 }, (_, day) => (
+          <div class="day-col" data-day={day}>
+            {blocks
+              .filter((b) => b.day === day)
+              .map((b) => {
+                const { top, height } = gridPosition(b);
+                const { lane, laneCount } = laneByDay.get(day)?.get(b.id) ?? { lane: 0, laneCount: 1 };
+                const conflict = conflictIds.has(b.id);
+                return (
+                  <div
+                    class={`block${conflict ? " conflict" : ""}`}
+                    style={{
+                      top: `${top}px`,
+                      height: `${height}px`,
+                      left: `${(lane / laneCount) * 100}%`,
+                      width: `${100 / laneCount}%`,
+                      backgroundColor: b.color,
+                    }}
+                    title={conflict ? `${b.label} — clashes with another committed session` : b.label}
+                  >
+                    {b.label}
+                    {conflict && <span class="clash-flag"> ⚠ clash</span>}
+                  </div>
+                );
+              })}
+            <div class="preview" hidden></div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+
+  <script define:vars={{ committed: committedForScript, gridStart: GRID_START_MINUTES }}>
+    // Hover = preview (pure client-side, no request); click the form's
+    // "Choose" button = commit (a real POST). Mirrors overlaps() from
+    // src/lib/timetable.ts — keep the two in sync if that changes.
+    function overlapsRange(day, start, end, other) {
+      return day === other.day && start < other.end && other.start < end;
+    }
+
+    const dayColumns = document.querySelectorAll(".day-col");
+
+    for (const option of document.querySelectorAll(".tutorial-option")) {
+      const day = Number(option.dataset.day);
+      const start = Number(option.dataset.start);
+      const end = Number(option.dataset.end);
+      const courseId = Number(option.dataset.courseId);
+      const overlay = dayColumns[day]?.querySelector(".preview");
+      if (!overlay) continue;
+
+      const show = () => {
+        const comparison = committed.filter((s) => !(s.courseId === courseId && s.kind === "tutorial"));
+        const conflict = comparison.some((s) => overlapsRange(day, start, end, s));
+        overlay.style.top = `${start - gridStart}px`;
+        overlay.style.height = `${end - start}px`;
+        overlay.classList.toggle("conflict", conflict);
+        overlay.hidden = false;
+      };
+      const hide = () => {
+        overlay.hidden = true;
+      };
+
+      option.addEventListener("mouseenter", show);
+      option.addEventListener("mouseleave", hide);
+      const focusable = option.querySelector("button");
+      focusable?.addEventListener("focus", show);
+      focusable?.addEventListener("blur", hide);
+    }
+  </script>
+</Base>
