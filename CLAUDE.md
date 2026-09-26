@@ -9,3 +9,12 @@ where it lives --- `fly.toml`, the `Dockerfile`, the CI workflow and
 [course website](https://comp.anu.edu.au/courses/comp4020-agentic-coding-studio/)
 publishes this deliverable's brief and spec. Read them before you plan or build;
 what the agent needs to carry from any of it is your call.
+
+## Process
+
+Commit at each meaningful checkpoint, push after each one — the repo is
+private until shipped, so there's no reason to batch. Run `pnpm check`
+before every commit; a red check is a stop, not a note for later. Visual and
+layout judgement (does the timetable grid read well, does hover feel
+responsive) is the user's call, not something to fake by standing up
+screenshot tooling — report what changed in plain text and let them look.
