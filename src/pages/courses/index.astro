@@ -14,27 +14,31 @@ const enrolled = enrolledCourseIds();
   </p>
   <ul class="course-list">
     {
-      courses.map((course) => (
-        <li class="course-card" style={{ borderInlineStartColor: course.color }}>
-          <h2>
-            <a href={`/courses/${course.code.toLowerCase()}/`}>
-              {course.code}: {course.title}
+      courses.map((course) => {
+        const isEnrolled = enrolled.has(course.id);
+        return (
+          <li class="course-card" style={{ borderInlineStartColor: course.color }}>
+            <a class="course-card-link" href={`/courses/${course.code.toLowerCase()}/`}>
+              <div class="course-card-heading">
+                <p class="course-card-code">{course.code}</p>
+                <h2 class="course-card-title">{course.title}</h2>
+              </div>
+              <p class="course-card-summary">{course.summary}</p>
             </a>
-          </h2>
-          <p>{course.summary}</p>
-          <form method="post" action="/api/enrol">
-            <input type="hidden" name="courseId" value={course.id} />
-            <input type="hidden" name="back" value="/courses/" />
-            {enrolled.has(course.id) ? (
-              <button type="submit" formaction="/api/drop">
-                Enrolled — drop
-              </button>
-            ) : (
-              <button type="submit">Add to my timetable</button>
-            )}
-          </form>
-        </li>
-      ))
+            <form method="post" action="/api/enrol" class="course-card-action">
+              <input type="hidden" name="courseId" value={course.id} />
+              <input type="hidden" name="back" value="/courses/" />
+              {isEnrolled ? (
+                <button type="submit" formaction="/api/drop" class="button-enrolled">
+                  Enrolled
+                </button>
+              ) : (
+                <button type="submit">Add</button>
+              )}
+            </form>
+          </li>
+        );
+      })
     }
   </ul>
 </Base>

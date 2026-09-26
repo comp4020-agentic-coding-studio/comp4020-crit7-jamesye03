@@ -54,32 +54,48 @@ a {
   border-block-end: 3px solid var(--gold);
 }
 
-nav[aria-label="site"] {
+.header-inner {
   display: flex;
-  gap: 1.5rem;
-  flex-wrap: wrap;
+  flex-direction: column;
   align-items: center;
+  gap: 0.6rem;
   max-width: var(--page-max);
   margin: 0 auto;
-  padding: 0.9rem var(--side-pad);
+  padding: 1.1rem var(--side-pad) 0;
+  text-align: center;
 }
 
-nav[aria-label="site"] a {
+.header-inner .brand {
   color: #fff;
   text-decoration: none;
-  font-weight: 600;
-}
-
-nav[aria-label="site"] a:hover,
-nav[aria-label="site"] a:focus-visible {
-  color: var(--gold);
-}
-
-nav[aria-label="site"] a.brand {
-  margin-inline-end: auto;
   font-weight: 800;
-  font-size: 1.15rem;
+  font-size: 1.3rem;
   letter-spacing: 0.02em;
+}
+
+.primary-nav {
+  display: flex;
+  justify-content: center;
+  gap: 2.5rem;
+  flex-wrap: wrap;
+  width: 100%;
+  padding-block: 0.7rem 0.9rem;
+  border-block-start: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.primary-nav a {
+  color: #fff;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 1.05rem;
+  padding: 0.35rem 1rem;
+  border-radius: 0.25rem;
+}
+
+.primary-nav a:hover,
+.primary-nav a:focus-visible {
+  color: var(--black);
+  background: var(--gold);
 }
 
 /* Banner (e.g. the enrolment-cap notice) */
@@ -187,57 +203,191 @@ button.button-secondary:focus-visible {
   font-size: 0.9rem;
 }
 
-/* Course catalog */
+button.button-enrolled,
+.button-enrolled {
+  background: #1257c2;
+  border-color: #1257c2;
+  color: #fff;
+}
+
+button.button-enrolled:hover,
+button.button-enrolled:focus-visible,
+.button-enrolled:hover,
+.button-enrolled:focus-visible {
+  background: #0d3f96;
+  border-color: #0d3f96;
+  color: #fff;
+}
+
+/* Course catalog: one long clickable rectangle per course. The whole card
+   (bar the enrol/drop button) links to the detail page via a "stretched
+   link" — course-card-link::after covers the positioned .course-card
+   ancestor, while .course-card-action sits above it in stacking order so
+   its own button still captures clicks. */
 
 .course-list {
   list-style: none;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
-  gap: 1rem;
+  gap: 0.85rem;
 }
 
 .course-card {
-  border-inline-start: 5px solid;
-  padding: 0.9rem 1.25rem;
-  background: var(--gold-tint);
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  border-inline-start: 6px solid;
+  border-block-end: 1px solid var(--border);
+  padding: 1.1rem 1.5rem;
+  background: #fff;
   border-radius: 0.25rem;
 }
 
-.course-card h2 {
-  margin-block-end: 0.25rem;
-  font-size: 1.1rem;
+.course-card-link {
+  position: static;
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(9rem, 13rem) 1fr;
+  align-items: center;
+  gap: 1.5rem;
+  color: inherit;
+  text-decoration: none;
+}
+
+.course-card-link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+.course-card-link:hover .course-card-title,
+.course-card-link:focus-visible .course-card-title {
+  color: var(--gold-text);
+  text-decoration: underline;
+}
+
+.course-card-heading {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.course-card-code {
+  margin: 0;
+  font-weight: 800;
+  font-size: 1.05rem;
+  color: var(--ink);
+}
+
+.course-card-title {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ink-soft);
   border: none;
   display: block;
 }
 
-.course-card h2 a {
+.course-card-summary {
+  margin: 0;
+  font-size: 0.92rem;
   color: var(--ink);
-  text-decoration: none;
 }
 
-.course-card h2 a:hover {
+.course-card-action {
+  position: relative;
+  z-index: 1;
+  flex: none;
+  margin: 0;
+}
+
+@media (max-width: 40rem) {
+  .course-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .course-card-link {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Course detail page: credit units / instructor / prerequisites at a
+   glance, plus a weighted assessment breakdown. */
+
+.course-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 1rem;
+  margin-block: 1.25rem;
+  padding: 1rem 1.25rem;
+  background: var(--gold-tint);
+  border-radius: 0.25rem;
+}
+
+.course-facts h2 {
+  margin: 0 0 0.2rem;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-soft);
+  border: none;
+  display: block;
+}
+
+.course-facts p {
+  margin: 0;
+}
+
+.assessment-list {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.assessment-list li {
+  display: grid;
+  grid-template-columns: minmax(10rem, 16rem) 3.5rem 1fr;
+  gap: 1rem;
+  align-items: baseline;
+  padding: 0.5rem 0;
+  border-block-end: 1px solid var(--border);
+}
+
+.assessment-name {
+  font-weight: 700;
+}
+
+.assessment-weight {
   color: var(--gold-text);
-  text-decoration: underline;
+  font-weight: 700;
+}
+
+.assessment-description {
+  color: var(--ink-soft);
+}
+
+@media (max-width: 40rem) {
+  .assessment-list li {
+    grid-template-columns: 1fr;
+    gap: 0.15rem;
+  }
 }
 
 /* Timetable */
 
 .timetable-layout {
   display: grid;
-  grid-template-columns: minmax(15rem, 18rem) 1fr;
+  grid-template-columns: minmax(22rem, 30rem) 1fr;
   gap: 1.5rem;
   align-items: start;
 }
 
-@media (max-width: 60rem) {
+@media (max-width: 70rem) {
   .timetable-layout {
     grid-template-columns: 1fr;
-  }
-
-  .course-panel {
-    max-height: none;
-    overflow-y: visible;
   }
 }
 
@@ -245,9 +395,6 @@ button.button-secondary:focus-visible {
   display: grid;
   align-content: start;
   gap: 0.6rem;
-  max-height: calc(100vh - 14rem);
-  overflow-y: auto;
-  padding-inline-end: 0.25rem;
 }
 
 .course-block {
@@ -303,25 +450,25 @@ button.button-secondary:focus-visible {
 
 .tutorial-option form {
   margin: 0;
-  padding: 0.2rem 0.4rem;
+  padding: 0.3rem 0.5rem;
   background: #fff;
   border: 1px solid var(--border);
   border-radius: 0.2rem;
-  font-size: 0.76rem;
-  flex-wrap: nowrap;
+  font-size: 0.8rem;
+  flex-wrap: wrap;
   justify-content: space-between;
+  align-items: center;
   gap: 0.4rem;
 }
 
 .tutorial-option-label {
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+  flex: 1 1 auto;
+  min-width: 10rem;
 }
 
 .tutorial-option button {
-  padding: 0.15rem 0.55rem;
-  font-size: 0.75rem;
+  padding: 0.2rem 0.65rem;
+  font-size: 0.78rem;
   flex: none;
 }
 
@@ -337,9 +484,9 @@ button.button-secondary:focus-visible {
 
 .timetable-grid {
   display: grid;
-  grid-template-columns: 2.75rem repeat(7, minmax(5.75rem, 1fr));
+  grid-template-columns: 2.75rem repeat(5, minmax(7.5rem, 1fr));
   grid-template-rows: auto var(--grid-height);
-  min-width: 43rem;
+  min-width: 40rem;
 }
 
 .day-head {

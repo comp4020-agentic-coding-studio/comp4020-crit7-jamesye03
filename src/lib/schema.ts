@@ -18,6 +18,14 @@ export const courses = sqliteTable("courses", {
   description: text().notNull(),
   units: int().notNull().default(6),
   color: text().notNull(),
+  // Nullable so this lands as a plain additive migration against the
+  // already-deployed volume: instructor/prerequisites are plain text,
+  // objectives/assessments are JSON-stringified arrays (see seed.ts).
+  instructor: text(),
+  prerequisites: text(),
+  objectives: text(),
+  assessments: text(),
+  assessmentFormat: text(),
 });
 
 // One row per timetabled block: a course's lecture (always exactly one) or

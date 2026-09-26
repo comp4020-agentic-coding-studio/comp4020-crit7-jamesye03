@@ -1,7 +1,7 @@
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 import Database from "better-sqlite3";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import { migrate } from "drizzle-orm/better-sqlite3/migrator";
 import { SEED_COURSES } from "./seed";
@@ -26,38 +26,63 @@ export const db = drizzle(client);
 migrate(db, { migrationsFolder: "./drizzle" });
 
 // The catalog is fixed seed data, not something a visitor creates — this
-// fills an empty database (a fresh volume, or the spec's throwaway one) once,
-// idempotently, so both a first boot and a test run see the same courses.
-function seedIfEmpty() {
-  if (db.select().from(courses).limit(1).all().length > 0) return;
+// keeps the database in sync with SEED_COURSES on every boot, matching rows
+// by natural key (course `code`; session `courseId`+`kind`+`label`) rather
+// than only inserting into an empty table. That matters because the deployed
+// Fly volume persists across redeploys: a plain "insert if empty" would never
+// backfill new columns or corrected session times onto already-seeded rows.
+// Matching by natural key (instead of dropping and reinserting) keeps row ids
+// stable, which matters because enrolments references them by id.
+function syncSeedData() {
   for (const course of SEED_COURSES) {
-    const { id: courseId } = db
-      .insert(courses)
-      .values({
-        code: course.code,
-        title: course.title,
-        summary: course.summary,
-        description: course.description,
-        color: course.color,
-      })
-      .returning({ id: courses.id })
-      .get();
+    const existingCourse = db.select().from(courses).where(eq(courses.code, course.code)).get();
+    const courseFields = {
+      title: course.title,
+      summary: course.summary,
+      description: course.description,
+      color: course.color,
+      instructor: course.instructor,
+      prerequisites: course.prerequisites,
+      objectives: JSON.stringify(course.objectives),
+      assessments: JSON.stringify(course.assessments),
+      assessmentFormat: course.assessmentFormat,
+    };
+    const courseId = existingCourse
+      ? existingCourse.id
+      : db
+          .insert(courses)
+          .values({ code: course.code, ...courseFields })
+          .returning({ id: courses.id })
+          .get().id;
+    if (existingCourse) {
+      db.update(courses).set(courseFields).where(eq(courses.id, courseId)).run();
+    }
+
     for (const session of course.sessions) {
-      db.insert(sessions)
-        .values({
-          courseId,
-          kind: session.kind,
-          label: session.label,
-          day: session.day,
-          startMinutes: session.startMinutes,
-          endMinutes: session.endMinutes,
-          location: session.location,
-        })
-        .run();
+      const existingSession = db
+        .select()
+        .from(sessions)
+        .where(
+          and(eq(sessions.courseId, courseId), eq(sessions.kind, session.kind), eq(sessions.label, session.label)),
+        )
+        .get();
+      const sessionFields = {
+        day: session.day,
+        startMinutes: session.startMinutes,
+        endMinutes: session.endMinutes,
+        location: session.location,
+      };
+      if (existingSession) {
+        db.update(sessions).set(sessionFields).where(eq(sessions.id, existingSession.id)).run();
+      } else {
+        db.insert(sessions)
+          .values({ courseId, kind: session.kind, label: session.label, ...sessionFields })
+          .run();
+      }
     }
   }
 }
-seedIfEmpty();
+syncSeedData();
 
 export type { Course, Session, Enrolment };
 

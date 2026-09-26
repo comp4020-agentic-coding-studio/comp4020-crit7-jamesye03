@@ -3,7 +3,9 @@
 // (its own copy — see the inline <script> in timetable/index.astro — mirrors
 // `overlaps` exactly; keep the two in sync if this changes).
 
-export const DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
+// Weekdays only — every seeded session falls Mon-Fri, and the grid drops
+// Saturday/Sunday entirely rather than rendering empty columns for them.
+export const DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri"] as const;
 
 export const GRID_START_MINUTES = 7 * 60;
 export const GRID_END_MINUTES = 21 * 60;

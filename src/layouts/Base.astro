@@ -18,11 +18,13 @@ const capReached = Astro.url.searchParams.get("error") === "cap";
   </head>
   <body>
     <header class="site-header">
-      <nav aria-label="site">
+      <div class="header-inner">
         <a href="/" class="brand">ANU Course Explorer</a>
-        <a href="/courses/">Courses</a>
-        <a href="/timetable/">My timetable</a>
-      </nav>
+        <nav aria-label="site" class="primary-nav">
+          <a href="/courses/">Courses</a>
+          <a href="/timetable/">My timetable</a>
+        </nav>
+      </div>
     </header>
     <main>
       {

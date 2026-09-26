@@ -7,15 +7,20 @@ field. This prototype models that slice end to end: one place to read a
 course's actual description, enrol in it, and immediately see how it sits in
 your week.
 
-Browse the catalog at `/courses/`, open a course to read its full
-description and session times, and enrol. `/timetable/` then shows every
-enrolled course's lecture (fixed) and tutorial options (yours to pick) on
-the left, and a real 7am–9pm, seven-day grid on the right. Hovering a
-tutorial option previews exactly where it would sit on the grid — no
-network request, just the times already on the page — before you commit to
-it with a click. Everything in the catalog (COMP1100 through MATH1115) is
-fictional: invented courses, invented times, built only to give the
-timetable real overlapping data to render.
+Browse the catalog at `/courses/` — one long clickable row per course, code
+and title on the left, an enrol button on the right — and open a course to
+read a full profile: description, learning objectives, a weighted assessment
+breakdown, prerequisites and instructor, in as much realistic detail as a
+real ANU course outline. `/timetable/` then shows every enrolled course's
+lecture (fixed) and tutorial options (yours to pick) on the left, and a real
+7am–9pm, Monday–Friday grid on the right. Hovering a tutorial option
+previews exactly where it would sit on the grid — no network request, just
+the times already on the page — before you commit to it with a click.
+Enrolment is capped at 4 courses, mirroring the unit-load limit a real
+enrolment system enforces; trying for a 5th surfaces a banner telling you to
+drop one first instead of silently failing. Everything in the catalog
+(COMP1100 through MATH1115) is fictional: invented courses, instructors and
+times, built only to give the timetable real overlapping data to render.
 
 ## What good looks like here
 

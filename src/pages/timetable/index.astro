@@ -56,7 +56,7 @@ const blocks: Block[] = enrolledCourses.flatMap((ec) => {
 const conflictIds = findConflicts(blocks);
 
 const laneByDay = new Map<number, Map<number, { lane: number; laneCount: number }>>();
-for (let day = 0; day < 7; day++) {
+for (let day = 0; day < DAY_LABELS.length; day++) {
   laneByDay.set(
     day,
     layoutDay(blocks.filter((b) => b.day === day)),
@@ -158,7 +158,7 @@ const committedForScript = blocks.map((b) => ({
             </div>
           ))}
         </div>
-        {Array.from({ length: 7 }, (_, day) => (
+        {Array.from({ length: DAY_LABELS.length }, (_, day) => (
           <div class="day-col" data-day={day}>
             {blocks
               .filter((b) => b.day === day)

@@ -14,14 +14,70 @@ const lecture = courseSessions.find((session) => session.kind === "lecture");
 const tutorials = courseSessions.filter((session) => session.kind === "tutorial");
 const enrolled = enrolledCourseIds();
 const isEnrolled = enrolled.has(course.id);
+
+interface Assessment {
+  name: string;
+  weight: string;
+  description: string;
+}
+
+const objectives: string[] = course.objectives ? JSON.parse(course.objectives) : [];
+const assessments: Assessment[] = course.assessments ? JSON.parse(course.assessments) : [];
 ---
 
 <Base title={`${course.code}: ${course.title}`}>
   <p><a href="/courses/">&larr; Back to catalog</a></p>
   <h1>{course.code}: {course.title}</h1>
   <p>{course.description}</p>
-  <p>{course.units} units.</p>
 
+  <div class="course-facts">
+    <div>
+      <h2>Credit units</h2>
+      <p>{course.units} units</p>
+    </div>
+    <div>
+      <h2>Instructor</h2>
+      <p>{course.instructor ?? "To be advised"}</p>
+    </div>
+    <div>
+      <h2>Prerequisites</h2>
+      <p>{course.prerequisites ?? "None"}</p>
+    </div>
+  </div>
+
+  {
+    objectives.length > 0 && (
+      <>
+        <h2>Learning objectives</h2>
+        <p>By the end of this course, students will be able to:</p>
+        <ul>
+          {objectives.map((objective) => (
+            <li>{objective}</li>
+          ))}
+        </ul>
+      </>
+    )
+  }
+
+  {
+    assessments.length > 0 && (
+      <>
+        <h2>Assessment</h2>
+        <ul class="assessment-list">
+          {assessments.map((assessment) => (
+            <li>
+              <span class="assessment-name">{assessment.name}</span>
+              <span class="assessment-weight">{assessment.weight}</span>
+              <span class="assessment-description">{assessment.description}</span>
+            </li>
+          ))}
+        </ul>
+        {course.assessmentFormat && <p>{course.assessmentFormat}</p>}
+      </>
+    )
+  }
+
+  <h2>Timetable</h2>
   {
     lecture && (
       <p>
@@ -49,7 +105,9 @@ const isEnrolled = enrolled.has(course.id);
   <form method="post" action={isEnrolled ? "/api/drop" : "/api/enrol"}>
     <input type="hidden" name="courseId" value={course.id} />
     <input type="hidden" name="back" value={`/courses/${course.code.toLowerCase()}/`} />
-    <button type="submit">{isEnrolled ? "Drop this course" : "Add to my timetable"}</button>
+    <button type="submit" class={isEnrolled ? "button-enrolled" : ""}>
+      {isEnrolled ? "Enrolled — drop this course" : "Add to my timetable"}
+    </button>
   </form>
   <p class="enrolment-count">
     {enrolled.size}/{MAX_ENROLMENTS} courses added.
