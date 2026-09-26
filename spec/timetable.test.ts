@@ -79,4 +79,35 @@ describe("the core flow, against the running app", () => {
     const html = await res.text();
     expect(html).not.toContain("COMP1100");
   });
+
+  it("blocks a 5th enrolment while 4 are active, and unblocks after a drop", async () => {
+    const active = ["1", "2", "3", "4"];
+    for (const courseId of active) {
+      await post("/api/enrol", new URLSearchParams({ courseId, back: "/courses/" }));
+    }
+
+    // Default (following) redirect behaviour, unlike the manual-redirect
+    // `post` helper above — the blocked attempt's redirect target is the
+    // page carrying the error banner, so follow it and read that page.
+    const blocked = await fetch(new URL("/api/enrol", baseUrl), {
+      method: "POST",
+      headers: { origin: baseUrl },
+      body: new URLSearchParams({ courseId: "5", back: "/courses/" }),
+    });
+    expect(await blocked.text()).toContain("4-course limit");
+    expect((await fetch(new URL("/courses/", baseUrl))).ok).toBe(true);
+
+    await post("/api/drop", new URLSearchParams({ courseId: active[0] }));
+    const unblocked = await fetch(new URL("/api/enrol", baseUrl), {
+      method: "POST",
+      headers: { origin: baseUrl },
+      body: new URLSearchParams({ courseId: "5", back: "/courses/" }),
+    });
+    expect(await unblocked.text()).not.toContain("4-course limit");
+
+    // Leave the shared db empty for any spec file that runs after this one.
+    for (const courseId of [...active.slice(1), "5"]) {
+      await post("/api/drop", new URLSearchParams({ courseId }));
+    }
+  });
 });

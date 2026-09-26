@@ -1,6 +1,6 @@
 ---
 import Base from "../../layouts/Base.astro";
-import { enrolledCourseIds, listCourses } from "../../lib/db";
+import { MAX_ENROLMENTS, enrolledCourseIds, listCourses } from "../../lib/db";
 
 const courses = listCourses();
 const enrolled = enrolledCourseIds();
@@ -9,6 +9,9 @@ const enrolled = enrolledCourseIds();
 <Base title="Course catalog">
   <h1>Course catalog</h1>
   <p>Every course's full description is right here — no separate lookup required.</p>
+  <p class="enrolment-count">
+    {enrolled.size}/{MAX_ENROLMENTS} courses added.
+  </p>
   <ul class="course-list">
     {
       courses.map((course) => (

@@ -116,10 +116,14 @@ const committedForScript = blocks.map((b) => ({
                   data-end={tutorial.endMinutes}
                   data-course-id={ec.course.id}
                 >
-                  <form method="post" action="/api/choose-tutorial">
+                  <form
+                    method="post"
+                    action="/api/choose-tutorial"
+                    title={`${tutorial.label}: ${DAY_LABELS[tutorial.day]} ${formatTime(tutorial.startMinutes)}–${formatTime(tutorial.endMinutes)}, ${tutorial.location}`}
+                  >
                     <input type="hidden" name="courseId" value={ec.course.id} />
                     <input type="hidden" name="sessionId" value={tutorial.id} />
-                    <span>
+                    <span class="tutorial-option-label">
                       {tutorial.label}: {DAY_LABELS[tutorial.day]} {formatTime(tutorial.startMinutes)}–
                       {formatTime(tutorial.endMinutes)}, {tutorial.location}
                     </span>

@@ -108,6 +108,15 @@ export function enrolledCourseIds(): Set<number> {
   return new Set(db.select().from(enrolments).all().map((row) => row.courseId));
 }
 
+// A real enrolment system caps how much you can take on at once; this
+// mirrors that with a fixed number rather than modelling unit-load rules.
+export const MAX_ENROLMENTS = 4;
+
+export function canEnrol(courseId: number): boolean {
+  const ids = enrolledCourseIds();
+  return ids.has(courseId) || ids.size < MAX_ENROLMENTS;
+}
+
 export function enrol(courseId: number): void {
   db.insert(enrolments).values({ courseId }).onConflictDoNothing().run();
 }

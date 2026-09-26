@@ -1,6 +1,6 @@
 ---
 import Base from "../../layouts/Base.astro";
-import { enrolledCourseIds, getCourseByCode, listSessionsForCourse } from "../../lib/db";
+import { MAX_ENROLMENTS, enrolledCourseIds, getCourseByCode, listSessionsForCourse } from "../../lib/db";
 import { DAY_LABELS, formatTime } from "../../lib/timetable";
 
 const { slug } = Astro.params;
@@ -12,7 +12,8 @@ if (!course) {
 const courseSessions = listSessionsForCourse(course.id);
 const lecture = courseSessions.find((session) => session.kind === "lecture");
 const tutorials = courseSessions.filter((session) => session.kind === "tutorial");
-const isEnrolled = enrolledCourseIds().has(course.id);
+const enrolled = enrolledCourseIds();
+const isEnrolled = enrolled.has(course.id);
 ---
 
 <Base title={`${course.code}: ${course.title}`}>
@@ -50,5 +51,8 @@ const isEnrolled = enrolledCourseIds().has(course.id);
     <input type="hidden" name="back" value={`/courses/${course.code.toLowerCase()}/`} />
     <button type="submit">{isEnrolled ? "Drop this course" : "Add to my timetable"}</button>
   </form>
+  <p class="enrolment-count">
+    {enrolled.size}/{MAX_ENROLMENTS} courses added.
+  </p>
   {isEnrolled && <p><a href="/timetable/">Go pick a tutorial time &rarr;</a></p>}
 </Base>

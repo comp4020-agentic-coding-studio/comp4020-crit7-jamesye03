@@ -1,5 +1,5 @@
 import type { APIRoute } from "astro";
-import { enrol } from "../../lib/db";
+import { canEnrol, enrol } from "../../lib/db";
 
 // Enrolling commits the course's (fixed) lecture immediately; the tutorial
 // stays unchosen until the student picks one on the timetable page. Plain
@@ -7,9 +7,12 @@ import { enrol } from "../../lib/db";
 export const POST: APIRoute = async ({ request, redirect }) => {
   const form = await request.formData();
   const courseId = Number(form.get("courseId"));
+  const back = String(form.get("back") ?? "/timetable/");
   if (Number.isInteger(courseId)) {
+    if (!canEnrol(courseId)) {
+      return redirect(`${back}${back.includes("?") ? "&" : "?"}error=cap`, 303);
+    }
     enrol(courseId);
   }
-  const back = String(form.get("back") ?? "/timetable/");
   return redirect(back, 303);
 };
